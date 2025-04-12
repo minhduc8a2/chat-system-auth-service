@@ -62,7 +62,7 @@ public class AuthService {
         }
 
         var user = new User(registerRequest.username(), passwordEncoder.encode(registerRequest.password()),
-                Role.USER);
+                Role.ROLE_USER);
         userRepository.save(user);
         userServiceClient.createUserProfile(new CreateProfileRequest(registerRequest.email()));
 

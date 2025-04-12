@@ -1,4 +1,4 @@
-package com.ducle.authservice;
+package com.ducle.authservice.service;
 
 import static org.mockito.Mockito.when;
 
@@ -16,6 +16,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.ducle.authservice.exception.AlreadyExistsException;
 import com.ducle.authservice.exception.EntityNotExistsException;
@@ -63,15 +64,14 @@ public class AuthServiceTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        Field field = AuthService.class.getDeclaredField("refreshTokenRenewBeforeTime");
-        field.setAccessible(true);
-        field.set(authService, 259200000L); // 3 days in milliseconds
+        ReflectionTestUtils.setField(authService, "refreshTokenRenewBeforeTime", 259200000L);
+
     }
 
     @Test
     void testLoginSuccess() {
         LoginRequest loginRequest = new LoginRequest("username", "password");
-        CustomUserDetails userDetails = new CustomUserDetails(new User(1L, "username", "password", Role.USER));
+        CustomUserDetails userDetails = new CustomUserDetails(new User(1L, "username", "password", Role.ROLE_USER));
         Authentication authResult = new UsernamePasswordAuthenticationToken(
                 userDetails, null, userDetails.getAuthorities());
         when(authenticationManager.authenticate(any(Authentication.class))).thenReturn(authResult);
@@ -92,7 +92,7 @@ public class AuthServiceTest {
         when(passwordEncoder.encode("pass")).thenReturn("encoded-pass");
 
         when(customUserDetailsService.loadUserByUsername("user"))
-                .thenReturn(new CustomUserDetails(new User("user", "encoded-pass", Role.USER)));
+                .thenReturn(new CustomUserDetails(new User("user", "encoded-pass", Role.ROLE_USER)));
 
         when(jwtUtils.generateToken(any(CustomUserDetails.class))).thenReturn("access-token");
         when(refreshTokenService.generateRefreshToken(any(CustomUserDetails.class))).thenReturn("refresh-token");
@@ -112,7 +112,7 @@ public class AuthServiceTest {
 
     @Test
     void testRefreshToken_RenewalNeeded() {
-        User user = new User("user", "pass", Role.USER);
+        User user = new User("user", "pass", Role.ROLE_USER);
         RefreshToken oldToken = new RefreshToken("old-token", user, Instant.now().plusMillis(1000));
 
         when(refreshTokenRepository.findByToken("old-token")).thenReturn(Optional.of(oldToken));

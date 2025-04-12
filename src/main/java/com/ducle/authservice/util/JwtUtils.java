@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import com.ducle.authservice.model.entity.User;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -62,16 +63,29 @@ public class JwtUtils {
     }
 
     public String extractUsername(String token) {
-        return extractAllClaims(token).getSubject();
+        try {
+            return extractAllClaims(token).getSubject();
+
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public boolean isTokenValid(String token) {
 
-        return !isTokenExpired(token);
+        try {
+            return !extractAllClaims(token).getExpiration().before(new Date());
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public boolean isTokenExpired(String token) {
-        return extractAllClaims(token).getExpiration().before(new Date());
+        try {
+            return extractAllClaims(token).getExpiration().before(new Date());
+        } catch (ExpiredJwtException e) {
+            return true;
+        }
     }
 
     public Claims extractAllClaims(String token) {
