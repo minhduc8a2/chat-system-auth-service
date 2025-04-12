@@ -23,7 +23,7 @@ import com.ducle.authservice.service.RefreshTokenService;
 import com.ducle.authservice.util.RefreshTokenGenerator;
 
 @ExtendWith(MockitoExtension.class)
-public class RefreshTokenServiceTest {
+class RefreshTokenServiceTest {
 
     @InjectMocks
     private RefreshTokenService refreshTokenService;

@@ -22,7 +22,7 @@ import io.jsonwebtoken.MalformedJwtException;
 
 
 @ExtendWith(MockitoExtension.class)
-public class JwtUtilsTest {
+class JwtUtilsTest {
     @InjectMocks
     private JwtUtils jwtUtils;
 
