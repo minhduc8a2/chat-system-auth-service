@@ -4,7 +4,6 @@ import java.time.Instant;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import com.ducle.authservice.model.domain.CustomUserDetails;
@@ -20,7 +19,7 @@ public class RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
 
     @Value("${jwt.refresh-token.expiration-time}")
-    private final long refreshTokenExpirationTime;
+    private long refreshTokenExpirationTime;
 
     
     public String generateRefreshToken(CustomUserDetails userDetails) {

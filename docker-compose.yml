@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: auth-service-postgres
+    environment:
+      POSTGRES_USER: minhduc8a2
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: auth_service_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - auth_service_postgres_data:/var/lib/postgresql/data
+  redis:
+    image: redis:latest
+    container_name: redis-container
+    ports:
+      - "6379:6379"
+
+volumes:
+  auth_service_postgres_data:
