@@ -2,6 +2,7 @@ package com.ducle.authservice.util;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.crypto.SecretKey;
@@ -10,6 +11,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+
+import com.ducle.authservice.model.entity.User;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -39,6 +42,18 @@ public class JwtUtils {
                 .toList());
         return Jwts.builder()
                 .subject(userDetails.getUsername())
+                .issuedAt(new Date())
+                .claims(claims)
+                .expiration(new Date(System.currentTimeMillis() + tokenExpirationTime))
+                .signWith(secretKey)
+                .compact();
+    }
+
+    public String generateToken(User user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("roles", List.of(user.getRole().name()));
+        return Jwts.builder()
+                .subject(user.getUsername())
                 .issuedAt(new Date())
                 .claims(claims)
                 .expiration(new Date(System.currentTimeMillis() + tokenExpirationTime))

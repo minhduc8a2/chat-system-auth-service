@@ -14,6 +14,12 @@ public class GlobalExceptionHandlers {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
+    @ExceptionHandler(EntityNotExistsException.class)
+    public ResponseEntity<ExceptionResponse> handleEntityNotExistsException(EntityNotExistsException ex) {
+        ExceptionResponse response = new ExceptionResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
 
 
     @ExceptionHandler(Exception.class)

@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.ducle.authservice.exception.EntityNotExistsException;
 import com.ducle.authservice.model.domain.CustomUserDetails;
 import com.ducle.authservice.model.entity.RefreshToken;
 import com.ducle.authservice.model.entity.User;
@@ -21,7 +22,6 @@ public class RefreshTokenService {
     @Value("${jwt.refresh-token.expiration-time}")
     private long refreshTokenExpirationTime;
 
-    
     public String generateRefreshToken(CustomUserDetails userDetails) {
         String token = UUID.randomUUID().toString();
 
@@ -31,4 +31,18 @@ public class RefreshTokenService {
                         Instant.now().plusMillis(refreshTokenExpirationTime)));
         return createdRefreshToken.getToken();
     }
+
+    public String generateRefreshToken(User user) {
+        String token = UUID.randomUUID().toString();
+
+        RefreshToken createdRefreshToken = refreshTokenRepository.save(
+                new RefreshToken(token,
+                        user,
+                        Instant.now().plusMillis(refreshTokenExpirationTime)));
+        return createdRefreshToken.getToken();
+    }
+
+   
+
+  
 }
