@@ -11,6 +11,7 @@ import com.ducle.authservice.model.domain.CustomUserDetails;
 import com.ducle.authservice.model.entity.RefreshToken;
 import com.ducle.authservice.model.entity.User;
 import com.ducle.authservice.repository.RefreshTokenRepository;
+import com.ducle.authservice.util.RefreshTokenGenerator;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,12 +19,15 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenGenerator refreshTokenGenerator;
 
     @Value("${jwt.refresh-token.expiration-time}")
     private long refreshTokenExpirationTime;
 
+   
+
     public String generateRefreshToken(CustomUserDetails userDetails) {
-        String token = UUID.randomUUID().toString();
+        String token = refreshTokenGenerator.generateToken();
 
         RefreshToken createdRefreshToken = refreshTokenRepository.save(
                 new RefreshToken(token,
@@ -33,7 +37,7 @@ public class RefreshTokenService {
     }
 
     public String generateRefreshToken(User user) {
-        String token = UUID.randomUUID().toString();
+        String token = refreshTokenGenerator.generateToken();
 
         RefreshToken createdRefreshToken = refreshTokenRepository.save(
                 new RefreshToken(token,

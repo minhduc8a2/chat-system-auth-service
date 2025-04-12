@@ -29,7 +29,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-    @Value("${jwt.refresh-token.renew-before-time}")
+    @Value(value ="${jwt.refresh-token.renew-before-time}" )
     private long refreshTokenRenewBeforeTime;
 
     private final AuthenticationManager authenticationManager;
@@ -44,7 +44,8 @@ public class AuthService {
     @Transactional
     public AuthResponse login(LoginRequest loginRequest) {
         CustomUserDetails userDetails = (CustomUserDetails) authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.username(), loginRequest.password()));
+                new UsernamePasswordAuthenticationToken(loginRequest.username(), loginRequest.password()))
+                .getPrincipal();
         String accessToken = jwtUtils.generateToken(userDetails);
         String refreshToken = refreshTokenService.generateRefreshToken(userDetails);
         return new AuthResponse(accessToken, refreshToken);
@@ -76,16 +77,16 @@ public class AuthService {
     public AuthResponse refresh(String stringRefreshToken) {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(stringRefreshToken)
                 .orElseThrow(() -> new EntityNotExistsException("Refresh token not found"));
-       
+
         User user = refreshToken.getUser();
         String newAccessToken = jwtUtils.generateToken(user);
         String newRefreshToken = refreshToken.getToken();
         // Check if the refresh token is about to expire and renew it if necessary
-        if(refreshToken.getExpiryDate().isBefore(Instant.now().plusMillis(refreshTokenRenewBeforeTime))){
+        if (refreshToken.getExpiryDate().isBefore(Instant.now().plusMillis(refreshTokenRenewBeforeTime))) {
             newRefreshToken = refreshTokenService.generateRefreshToken(user);
             refreshTokenRepository.delete(refreshToken);
+            
         }
-
         return new AuthResponse(newAccessToken, newRefreshToken);
     }
 

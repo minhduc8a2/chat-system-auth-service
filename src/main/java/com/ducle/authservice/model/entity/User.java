@@ -32,9 +32,15 @@ public class User {
     public User(CustomUserDetails userDetails) {
         this.username = userDetails.getUsername();
         this.password = userDetails.getPassword();
-        this.role = Role.valueOf(userDetails.getAuthorities().toString());
+        String authority = userDetails.getAuthorities()
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No role found"))
+                .getAuthority();
+
+        this.role = Role.valueOf(authority);
     }
-    
+
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long id;
@@ -46,5 +52,5 @@ public class User {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    private Role role; 
+    private Role role;
 }
