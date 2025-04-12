@@ -1,6 +1,6 @@
 package com.ducle.authservice.model.dto;
 
-public record LoginResponse(
+public record AuthResponse(
                 String accessToken,
                 String refreshToken) {
 

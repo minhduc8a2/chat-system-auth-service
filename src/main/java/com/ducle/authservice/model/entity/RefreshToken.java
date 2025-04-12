@@ -22,6 +22,11 @@ import lombok.Setter;
 @Getter
 @Setter
 public class RefreshToken {
+    public RefreshToken( String token,User user, Instant expiryDate ) {
+        this.token = token;
+        this.user = user;
+        this.expiryDate = expiryDate;
+    }
     
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
@@ -30,11 +35,12 @@ public class RefreshToken {
     @Column(nullable = false, unique = true)
     private String token;
 
-    @Column(nullable = false)
-    private Instant expiryDate;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user; 
+
+    @Column(nullable = false)
+    private Instant expiryDate;
+
 
 }
