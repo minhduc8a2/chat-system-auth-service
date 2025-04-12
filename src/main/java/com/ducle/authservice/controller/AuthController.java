@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ducle.authservice.model.dto.AuthResponse;
 import com.ducle.authservice.model.dto.LoginRequest;
+import com.ducle.authservice.model.dto.RefreshTokenRequest;
 import com.ducle.authservice.model.dto.RegisterRequest;
 import com.ducle.authservice.service.AuthService;
 
@@ -35,9 +36,9 @@ public class AuthController {
         return ResponseEntity.ok(authService.register(registerRequest));
     }
 
-    @GetMapping("/refresh-token")
-    public ResponseEntity<AuthResponse> renewRefreshToken(@NotBlank @RequestParam String refreshToken) {
-        return ResponseEntity.ok(authService.refresh(refreshToken));
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> renewRefreshToken(@Valid @RequestBody RefreshTokenRequest refreshTokenRequest) {
+        return ResponseEntity.ok(authService.refresh(refreshTokenRequest.refreshToken()));
     }
 
 }
