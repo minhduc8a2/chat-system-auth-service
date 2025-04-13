@@ -23,6 +23,7 @@ import com.ducle.authservice.exception.EntityNotExistsException;
 import com.ducle.authservice.model.domain.CustomUserDetails;
 import com.ducle.authservice.model.domain.Role;
 import com.ducle.authservice.model.dto.AuthResponse;
+import com.ducle.authservice.model.dto.EmailCheckingRequest;
 import com.ducle.authservice.model.dto.LoginRequest;
 import com.ducle.authservice.model.dto.RegisterRequest;
 import com.ducle.authservice.model.entity.RefreshToken;
@@ -88,7 +89,7 @@ class AuthServiceTest {
         RegisterRequest request = new RegisterRequest("user", "pass", "user@example.com");
 
         when(userRepository.existsByUsername("user")).thenReturn(false);
-        when(userServiceClient.checkEmailExists("user@example.com")).thenReturn(false);
+        when(userServiceClient.checkEmailExists(new EmailCheckingRequest("user@example.com"))).thenReturn( false);
         when(passwordEncoder.encode("pass")).thenReturn("encoded-pass");
 
         when(customUserDetailsService.loadUserByUsername("user"))

@@ -11,6 +11,7 @@ import com.ducle.authservice.model.domain.CustomUserDetails;
 import com.ducle.authservice.model.entity.RefreshToken;
 import com.ducle.authservice.model.entity.User;
 import com.ducle.authservice.repository.RefreshTokenRepository;
+import com.ducle.authservice.repository.UserRepository;
 import com.ducle.authservice.util.RefreshTokenGenerator;
 
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 public class RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final RefreshTokenGenerator refreshTokenGenerator;
+    private final UserRepository userRepository;
 
     @Value("${jwt.refresh-token.expiration-time}")
     private long refreshTokenExpirationTime;
@@ -28,14 +30,16 @@ public class RefreshTokenService {
 
     public String generateRefreshToken(CustomUserDetails userDetails) {
         String token = refreshTokenGenerator.generateToken();
-
+        User user = userRepository.findById(userDetails.getUserId())
+                .orElseThrow(() -> new EntityNotExistsException("User not found"));
         RefreshToken createdRefreshToken = refreshTokenRepository.save(
                 new RefreshToken(token,
-                        new User(userDetails),
+                        user,
                         Instant.now().plusMillis(refreshTokenExpirationTime)));
         return createdRefreshToken.getToken();
     }
 
+   
     public String generateRefreshToken(User user) {
         String token = refreshTokenGenerator.generateToken();
 

@@ -15,6 +15,7 @@ import com.ducle.authservice.model.domain.CustomUserDetails;
 import com.ducle.authservice.model.domain.Role;
 import com.ducle.authservice.model.dto.AuthResponse;
 import com.ducle.authservice.model.dto.CreateProfileRequest;
+import com.ducle.authservice.model.dto.EmailCheckingRequest;
 import com.ducle.authservice.model.dto.LoginRequest;
 import com.ducle.authservice.model.dto.RegisterRequest;
 import com.ducle.authservice.model.entity.RefreshToken;
@@ -29,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-    @Value(value ="${jwt.refresh-token.renew-before-time}" )
+    @Value(value = "${jwt.refresh-token.renew-before-time}")
     private long refreshTokenRenewBeforeTime;
 
     private final AuthenticationManager authenticationManager;
@@ -56,7 +57,7 @@ public class AuthService {
         if (userRepository.existsByUsername(registerRequest.username())) {
             throw new AlreadyExistsException("Username already exists");
         }
-        boolean emailExists = userServiceClient.checkEmailExists(registerRequest.email());
+        boolean emailExists = userServiceClient.checkEmailExists(new EmailCheckingRequest(registerRequest.email()));
         if (emailExists) {
             throw new AlreadyExistsException("Email already exists");
         }
@@ -68,7 +69,7 @@ public class AuthService {
 
         CustomUserDetails userDetails = customUserDetailsService.loadUserByUsername(registerRequest.username());
         String accessToken = jwtUtils.generateToken(userDetails);
-        String refreshToken = refreshTokenService.generateRefreshToken(userDetails);
+        String refreshToken = refreshTokenService.generateRefreshToken(user);
 
         return new AuthResponse(accessToken, refreshToken);
     }
@@ -85,7 +86,7 @@ public class AuthService {
         if (refreshToken.getExpiryDate().isBefore(Instant.now().plusMillis(refreshTokenRenewBeforeTime))) {
             newRefreshToken = refreshTokenService.generateRefreshToken(user);
             refreshTokenRepository.delete(refreshToken);
-            
+
         }
         return new AuthResponse(newAccessToken, newRefreshToken);
     }

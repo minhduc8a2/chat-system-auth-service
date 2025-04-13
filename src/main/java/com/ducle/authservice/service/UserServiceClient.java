@@ -1,19 +1,20 @@
 package com.ducle.authservice.service;
 
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import com.ducle.authservice.model.dto.CreateProfileRequest;
+import com.ducle.authservice.model.dto.EmailCheckingRequest;
 
-@FeignClient(name = "user-service")
+@FeignClient("${user-service.name}")
 public interface UserServiceClient {
-    
-    @GetMapping("/api/v1/users/email_exists")
-    Boolean checkEmailExists(@RequestParam String email);
 
-    @PostMapping("/api/v1/users")
-    void createUserProfile(@RequestBody CreateProfileRequest createProfileRequest);
+    @PostMapping("${api.users.email.exists.url}")
+    public Boolean checkEmailExists(@RequestBody EmailCheckingRequest request);
+
+    @PostMapping("${api.users.url}")
+    public void createUserProfile(@RequestBody CreateProfileRequest createProfileRequest);
 }
