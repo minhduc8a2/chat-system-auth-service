@@ -3,7 +3,6 @@ package com.ducle.authservice.service;
 import java.time.Instant;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.data.redis.RedisProperties.Lettuce.Cluster.Refresh;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,10 +13,10 @@ import com.ducle.authservice.exception.EntityNotExistsException;
 import com.ducle.authservice.model.domain.CustomUserDetails;
 import com.ducle.authservice.model.domain.Role;
 import com.ducle.authservice.model.dto.AuthResponse;
-import com.ducle.authservice.model.dto.CreateProfileRequest;
 import com.ducle.authservice.model.dto.EmailCheckingRequest;
 import com.ducle.authservice.model.dto.LoginRequest;
 import com.ducle.authservice.model.dto.RegisterRequest;
+import com.ducle.authservice.model.dto.UserDTO;
 import com.ducle.authservice.model.entity.RefreshToken;
 import com.ducle.authservice.model.entity.User;
 import com.ducle.authservice.repository.RefreshTokenRepository;
@@ -65,7 +64,7 @@ public class AuthService {
         var user = new User(registerRequest.username(), passwordEncoder.encode(registerRequest.password()),
                 Role.ROLE_USER);
         userRepository.save(user);
-        userServiceClient.createUserProfile(new CreateProfileRequest(registerRequest.email()));
+        userServiceClient.createUserProfile(new UserDTO(registerRequest.email()));
 
         CustomUserDetails userDetails = customUserDetailsService.loadUserByUsername(registerRequest.username());
         String accessToken = jwtUtils.generateToken(userDetails);
