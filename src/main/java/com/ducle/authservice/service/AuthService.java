@@ -64,7 +64,7 @@ public class AuthService {
         var user = new User(registerRequest.username(), passwordEncoder.encode(registerRequest.password()),
                 Role.ROLE_USER);
         userRepository.save(user);
-        userServiceClient.createUserProfile(new UserDTO(registerRequest.email()));
+        userServiceClient.createUserProfile(new UserDTO(registerRequest.email(),user.getId()));
 
         CustomUserDetails userDetails = customUserDetailsService.loadUserByUsername(registerRequest.username());
         String accessToken = jwtUtils.generateToken(userDetails);
