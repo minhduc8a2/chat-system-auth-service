@@ -10,16 +10,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.ducle.authservice.model.domain.CustomUserDetails;
 import com.ducle.authservice.model.domain.Role;
 import com.ducle.authservice.model.entity.User;
 
 import io.jsonwebtoken.MalformedJwtException;
-
 
 @ExtendWith(MockitoExtension.class)
 class JwtUtilsTest {
@@ -31,7 +27,7 @@ class JwtUtilsTest {
 
     @BeforeEach
     void setUp() {
-        
+
         ReflectionTestUtils.setField(jwtUtils, "secret", secret);
         ReflectionTestUtils.setField(jwtUtils, "tokenExpirationTime", expiration);
         jwtUtils.init();
@@ -39,9 +35,9 @@ class JwtUtilsTest {
 
     @Test
     void testGenerateTokenAndValidate() {
-        UserDetails userDetails = new CustomUserDetails(new User("testuser", "password", Role.ROLE_USER));
+        User user = new User("testuser", "password", Role.ROLE_USER);
 
-        String token = jwtUtils.generateToken(userDetails);
+        String token = jwtUtils.generateToken(user);
 
         assertThat(token).isNotBlank();
         assertThat(jwtUtils.extractUsername(token)).isEqualTo("testuser");
@@ -76,9 +72,9 @@ class JwtUtilsTest {
         ReflectionTestUtils.setField(jwtUtils, "tokenExpirationTime", 1000L);
         jwtUtils.init();
 
-        UserDetails userDetails = new CustomUserDetails(new User("testuser", "password", Role.ROLE_USER));
+        User user = new User("testuser", "password", Role.ROLE_USER);
 
-        String token = jwtUtils.generateToken(userDetails);
+        String token = jwtUtils.generateToken(user);
 
         // Sleep for 1.5 seconds to let token expire
         Thread.sleep(1500);
@@ -89,9 +85,9 @@ class JwtUtilsTest {
 
     @Test
     void shouldExtractClaimsProperly() {
-        UserDetails userDetails = new CustomUserDetails(new User("testuser", "password", Role.ROLE_USER));
+        User user = new User("testuser", "password", Role.ROLE_USER);
 
-        String token = jwtUtils.generateToken(userDetails);
+        String token = jwtUtils.generateToken(user);
 
         var claims = jwtUtils.extractAllClaims(token);
         assertThat(claims.getSubject()).isEqualTo("testuser");

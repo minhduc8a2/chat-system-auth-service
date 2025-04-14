@@ -2,7 +2,6 @@ package com.ducle.authservice.service;
 
 import static org.mockito.Mockito.when;
 
-import java.lang.reflect.Field;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -12,28 +11,22 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.ducle.authservice.exception.AlreadyExistsException;
 import com.ducle.authservice.exception.EntityNotExistsException;
-import com.ducle.authservice.model.domain.CustomUserDetails;
 import com.ducle.authservice.model.domain.Role;
 import com.ducle.authservice.model.dto.AuthResponse;
 import com.ducle.authservice.model.dto.EmailCheckingRequest;
 import com.ducle.authservice.model.dto.LoginRequest;
 import com.ducle.authservice.model.dto.RegisterRequest;
+import com.ducle.authservice.model.dto.UserDTO;
 import com.ducle.authservice.model.entity.RefreshToken;
 import com.ducle.authservice.model.entity.User;
 import com.ducle.authservice.repository.RefreshTokenRepository;
 import com.ducle.authservice.repository.UserRepository;
-import com.ducle.authservice.service.AuthService;
-import com.ducle.authservice.service.CustomUserDetailsService;
-import com.ducle.authservice.service.RefreshTokenService;
-import com.ducle.authservice.service.UserServiceClient;
+
 import com.ducle.authservice.util.JwtUtils;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -46,10 +39,6 @@ class AuthServiceTest {
     @InjectMocks
     private AuthService authService;
 
-    @Mock
-    private AuthenticationManager authenticationManager;
-    @Mock
-    private CustomUserDetailsService customUserDetailsService;
     @Mock
     private JwtUtils jwtUtils;
     @Mock
@@ -72,12 +61,11 @@ class AuthServiceTest {
     @Test
     void testLoginSuccess() {
         LoginRequest loginRequest = new LoginRequest("username", "password");
-        CustomUserDetails userDetails = new CustomUserDetails(new User(1L, "username", "password", Role.ROLE_USER));
-        Authentication authResult = new UsernamePasswordAuthenticationToken(
-                userDetails, null, userDetails.getAuthorities());
-        when(authenticationManager.authenticate(any(Authentication.class))).thenReturn(authResult);
-        when(jwtUtils.generateToken(userDetails)).thenReturn("accessToken");
-        when(refreshTokenService.generateRefreshToken(userDetails)).thenReturn("refreshToken");
+        User user = new User(1L, "username", "password", Role.ROLE_USER);
+
+        when(userRepository.findByUsername(user.getUsername())).thenReturn(Optional.of(user));
+        when(jwtUtils.generateToken(user)).thenReturn("accessToken");
+        when(refreshTokenService.generateRefreshToken(user)).thenReturn("refreshToken");
 
         AuthResponse response = authService.login(loginRequest);
         assertThat(response.accessToken()).isEqualTo("accessToken");
@@ -89,14 +77,13 @@ class AuthServiceTest {
         RegisterRequest request = new RegisterRequest("user", "pass", "user@example.com");
 
         when(userRepository.existsByUsername("user")).thenReturn(false);
-        when(userServiceClient.checkEmailExists(new EmailCheckingRequest("user@example.com"))).thenReturn( false);
+        when(userServiceClient.checkEmailExists(new EmailCheckingRequest("user@example.com"))).thenReturn(false);
         when(passwordEncoder.encode("pass")).thenReturn("encoded-pass");
 
-        when(customUserDetailsService.loadUserByUsername("user"))
-                .thenReturn(new CustomUserDetails(new User("user", "encoded-pass", Role.ROLE_USER)));
-
-        when(jwtUtils.generateToken(any(CustomUserDetails.class))).thenReturn("access-token");
-        when(refreshTokenService.generateRefreshToken(any(CustomUserDetails.class))).thenReturn("refresh-token");
+        when(userRepository.save(any(User.class))).thenReturn(new User("user", "encoded-pass", Role.ROLE_USER));
+       
+        when(jwtUtils.generateToken(any(User.class))).thenReturn("access-token");
+        when(refreshTokenService.generateRefreshToken(any(User.class))).thenReturn("refresh-token");
 
         AuthResponse response = authService.register(request);
 

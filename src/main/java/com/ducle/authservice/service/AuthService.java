@@ -3,14 +3,11 @@ package com.ducle.authservice.service;
 import java.time.Instant;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.ducle.authservice.exception.AlreadyExistsException;
 import com.ducle.authservice.exception.EntityNotExistsException;
-import com.ducle.authservice.model.domain.CustomUserDetails;
 import com.ducle.authservice.model.domain.Role;
 import com.ducle.authservice.model.dto.AuthResponse;
 import com.ducle.authservice.model.dto.EmailCheckingRequest;
@@ -32,8 +29,6 @@ public class AuthService {
     @Value(value = "${jwt.refresh-token.renew-before-time}")
     private long refreshTokenRenewBeforeTime;
 
-    private final AuthenticationManager authenticationManager;
-    private final CustomUserDetailsService customUserDetailsService;
     private final JwtUtils jwtUtils;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -43,11 +38,10 @@ public class AuthService {
 
     @Transactional
     public AuthResponse login(LoginRequest loginRequest) {
-        CustomUserDetails userDetails = (CustomUserDetails) authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.username(), loginRequest.password()))
-                .getPrincipal();
-        String accessToken = jwtUtils.generateToken(userDetails);
-        String refreshToken = refreshTokenService.generateRefreshToken(userDetails);
+        User user = userRepository.findByUsername(loginRequest.username())
+                .orElseThrow(() -> new EntityNotExistsException("User not found"));
+        String accessToken = jwtUtils.generateToken(user);
+        String refreshToken = refreshTokenService.generateRefreshToken(user);
         return new AuthResponse(accessToken, refreshToken);
     }
 
@@ -61,14 +55,13 @@ public class AuthService {
             throw new AlreadyExistsException("Email already exists");
         }
 
-        var user = new User(registerRequest.username(), passwordEncoder.encode(registerRequest.password()),
+        User user = new User(registerRequest.username(), passwordEncoder.encode(registerRequest.password()),
                 Role.ROLE_USER);
-        userRepository.save(user);
-        userServiceClient.createUserProfile(new UserDTO(registerRequest.email(),user.getId()));
+        User savedUser = userRepository.save(user);
+        userServiceClient.createUserProfile(new UserDTO(registerRequest.email(), savedUser.getId()));
 
-        CustomUserDetails userDetails = customUserDetailsService.loadUserByUsername(registerRequest.username());
-        String accessToken = jwtUtils.generateToken(userDetails);
-        String refreshToken = refreshTokenService.generateRefreshToken(user);
+        String accessToken = jwtUtils.generateToken(savedUser);
+        String refreshToken = refreshTokenService.generateRefreshToken(savedUser);
 
         return new AuthResponse(accessToken, refreshToken);
     }

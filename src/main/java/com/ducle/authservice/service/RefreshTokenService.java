@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.ducle.authservice.exception.EntityNotExistsException;
-import com.ducle.authservice.model.domain.CustomUserDetails;
 import com.ducle.authservice.model.entity.RefreshToken;
 import com.ducle.authservice.model.entity.User;
 import com.ducle.authservice.repository.RefreshTokenRepository;
@@ -21,23 +20,9 @@ import lombok.RequiredArgsConstructor;
 public class RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final RefreshTokenGenerator refreshTokenGenerator;
-    private final UserRepository userRepository;
 
     @Value("${jwt.refresh-token.expiration-time}")
     private long refreshTokenExpirationTime;
-
-   
-
-    public String generateRefreshToken(CustomUserDetails userDetails) {
-        String token = refreshTokenGenerator.generateToken();
-        User user = userRepository.findById(userDetails.getUserId())
-                .orElseThrow(() -> new EntityNotExistsException("User not found"));
-        RefreshToken createdRefreshToken = refreshTokenRepository.save(
-                new RefreshToken(token,
-                        user,
-                        Instant.now().plusMillis(refreshTokenExpirationTime)));
-        return createdRefreshToken.getToken();
-    }
 
    
     public String generateRefreshToken(User user) {

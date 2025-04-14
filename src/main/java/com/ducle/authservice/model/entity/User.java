@@ -1,6 +1,5 @@
 package com.ducle.authservice.model.entity;
 
-import com.ducle.authservice.model.domain.CustomUserDetails;
 import com.ducle.authservice.model.domain.Role;
 
 import jakarta.persistence.Column;
@@ -29,17 +28,7 @@ public class User {
         this.role = role;
     }
 
-    public User(CustomUserDetails userDetails) {
-        this.username = userDetails.getUsername();
-        this.password = userDetails.getPassword();
-        String authority = userDetails.getAuthorities()
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("No role found"))
-                .getAuthority();
-
-        this.role = Role.valueOf(authority);
-    }
+   
 
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)

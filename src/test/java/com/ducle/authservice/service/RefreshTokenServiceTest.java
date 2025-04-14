@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import java.lang.reflect.Field;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,12 +13,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.ducle.authservice.model.domain.CustomUserDetails;
 import com.ducle.authservice.model.domain.Role;
 import com.ducle.authservice.model.entity.RefreshToken;
 import com.ducle.authservice.model.entity.User;
 import com.ducle.authservice.repository.RefreshTokenRepository;
-import com.ducle.authservice.service.RefreshTokenService;
 import com.ducle.authservice.util.RefreshTokenGenerator;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,17 +36,6 @@ class RefreshTokenServiceTest {
         ReflectionTestUtils.setField(refreshTokenService, "refreshTokenExpirationTime", 15 * 24 * 60 * 60 * 1000L); 
     }
 
-    @Test
-    void testGenerateRefreshTokenByUserDetails() {
-        when(refreshTokenGenerator.generateToken()).thenReturn("test-refresh-token");
-        when(refreshTokenRepository.save(any(RefreshToken.class)))
-                .thenReturn(new RefreshToken("test-refresh-token", null, null));
-        CustomUserDetails userDetails = new CustomUserDetails(new User(1L, "testUser", "testPassword", Role.ROLE_USER));
-
-        String refreshToken = refreshTokenService.generateRefreshToken(userDetails);
-
-        assertThat(refreshToken).isEqualTo("test-refresh-token");
-    }
 
     @Test
     void testGenerateRefreshTokenByUser() {
