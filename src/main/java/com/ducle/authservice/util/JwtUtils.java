@@ -33,11 +33,10 @@ public class JwtUtils {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    
-
     public String generateToken(User user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles", List.of(user.getRole().name()));
+        claims.put("userId", user.getId());
         return Jwts.builder()
                 .subject(user.getUsername())
                 .issuedAt(new Date())
