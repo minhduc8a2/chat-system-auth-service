@@ -6,11 +6,9 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.ducle.authservice.exception.EntityNotExistsException;
 import com.ducle.authservice.model.entity.RefreshToken;
 import com.ducle.authservice.model.entity.User;
 import com.ducle.authservice.repository.RefreshTokenRepository;
-import com.ducle.authservice.repository.UserRepository;
 import com.ducle.authservice.util.RefreshTokenGenerator;
 
 import lombok.RequiredArgsConstructor;
