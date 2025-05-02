@@ -18,6 +18,8 @@ import com.ducle.authservice.model.entity.RefreshToken;
 import com.ducle.authservice.model.entity.User;
 import com.ducle.authservice.repository.RefreshTokenRepository;
 import com.ducle.authservice.repository.UserRepository;
+import com.ducle.authservice.service.cache.RefreshTokenCacheService;
+import com.ducle.authservice.service.cache.UserCacheService;
 import com.ducle.authservice.util.JwtUtils;
 
 import jakarta.transaction.Transactional;
@@ -32,14 +34,24 @@ public class AuthService {
     private final JwtUtils jwtUtils;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final UserServiceClient userServiceClient;
+
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final UserCacheService userCacheService;
+
+    private final UserServiceClient userServiceClient;
+
+    private final RefreshTokenCacheService refreshTokenCacheService;
 
     @Transactional
     public AuthResponse login(LoginRequest loginRequest) {
-        User user = userRepository.findByUsername(loginRequest.username())
-                .orElseThrow(() -> new EntityNotExistsException("User not found"));
+        User user = userCacheService.getUserByUsername(loginRequest.username());
+        if (user == null) {
+            throw new EntityNotExistsException("Incorrect username or password");
+        }
+        if (!passwordEncoder.matches(loginRequest.password(), user.getPassword())) {
+            throw new EntityNotExistsException("Incorrect username or password");
+        }
         String accessToken = jwtUtils.generateToken(user);
         String refreshToken = refreshTokenService.generateRefreshToken(user);
         return new AuthResponse(accessToken, refreshToken);
@@ -47,10 +59,10 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest registerRequest) {
-        if (userRepository.existsByUsername(registerRequest.username())) {
+        if (userCacheService.userExistsByUsername(registerRequest.username())) {
             throw new AlreadyExistsException("Username already exists");
         }
-        boolean emailExists = userServiceClient.checkEmailExists(new EmailCheckingRequest(registerRequest.email()));
+        boolean emailExists = userCacheService.checkEmailExists(new EmailCheckingRequest(registerRequest.email()));
         if (emailExists) {
             throw new AlreadyExistsException("Email already exists");
         }
@@ -68,13 +80,14 @@ public class AuthService {
 
     @Transactional
     public AuthResponse refresh(String stringRefreshToken) {
-        RefreshToken refreshToken = refreshTokenRepository.findByToken(stringRefreshToken)
-                .orElseThrow(() -> new EntityNotExistsException("Refresh token not found"));
+        RefreshToken refreshToken = refreshTokenCacheService.findByToken(stringRefreshToken);
+        if (refreshToken == null) {
+            throw new EntityNotExistsException("Refresh token not found");
+        }
 
         User user = refreshToken.getUser();
         String newAccessToken = jwtUtils.generateToken(user);
         String newRefreshToken = refreshToken.getToken();
-        // Check if the refresh token is about to expire and renew it if necessary
         if (refreshToken.getExpiryDate().isBefore(Instant.now().plusMillis(refreshTokenRenewBeforeTime))) {
             newRefreshToken = refreshTokenService.generateRefreshToken(user);
             refreshTokenRepository.delete(refreshToken);

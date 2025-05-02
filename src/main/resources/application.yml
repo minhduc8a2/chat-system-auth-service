@@ -1,0 +1,54 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: auth-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/auth_service_db
+    username: minhduc8a2
+    password: 123456
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: create
+
+  cache:
+    type: redis
+
+  
+  cloud:
+    config:
+      enabled: false
+  # config:
+  #   import: configserver:http://localhost:8080 
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+
+jwt:
+  secret: X0iDLiUGr5em1s0hWKnZCMdJ+irvhURKSo1faNKpGxY=
+  expiration-time: 900000
+  refresh-token:
+    expiration-time: 604800000
+    renew-before-time: 259200000
+
+api:
+  version: v1
+  base-url: /api/${api.version}
+  auth:
+    url: ${api.base-url}/auth
+  users:
+    url: /api/v1/users
+    email:
+      exists:
+        url: ${api.users.url}/email_exists
+
+user-service:
+  name: USER-SERVICE
