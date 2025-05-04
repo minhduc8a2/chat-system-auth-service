@@ -14,6 +14,7 @@ import com.ducle.authservice.model.dto.EmailCheckingRequest;
 import com.ducle.authservice.model.dto.LoginRequest;
 import com.ducle.authservice.model.dto.RegisterRequest;
 import com.ducle.authservice.model.dto.UserDTO;
+import com.ducle.authservice.model.dto.cache.UserCacheDTO;
 import com.ducle.authservice.model.entity.RefreshToken;
 import com.ducle.authservice.model.entity.User;
 import com.ducle.authservice.repository.RefreshTokenRepository;
@@ -45,11 +46,11 @@ public class AuthService {
 
     @Transactional
     public AuthResponse login(LoginRequest loginRequest) {
-        User user = userCacheService.getUserByUsername(loginRequest.username());
+        UserCacheDTO user = userCacheService.getUserByUsername(loginRequest.username());
         if (user == null) {
             throw new EntityNotExistsException("Incorrect username or password");
         }
-        if (!passwordEncoder.matches(loginRequest.password(), user.getPassword())) {
+        if (!passwordEncoder.matches(loginRequest.password(), user.password())) {
             throw new EntityNotExistsException("Incorrect username or password");
         }
         String accessToken = jwtUtils.generateToken(user);
@@ -62,7 +63,7 @@ public class AuthService {
         if (userCacheService.userExistsByUsername(registerRequest.username())) {
             throw new AlreadyExistsException("Username already exists");
         }
-        boolean emailExists = userCacheService.checkEmailExists(new EmailCheckingRequest(registerRequest.email()));
+        boolean emailExists = userServiceClient.checkEmailExists(new EmailCheckingRequest(registerRequest.email()));
         if (emailExists) {
             throw new AlreadyExistsException("Email already exists");
         }
@@ -80,17 +81,18 @@ public class AuthService {
 
     @Transactional
     public AuthResponse refresh(String stringRefreshToken) {
-        RefreshToken refreshToken = refreshTokenCacheService.findByToken(stringRefreshToken);
+        var refreshToken = refreshTokenCacheService.findByToken(stringRefreshToken);
         if (refreshToken == null) {
             throw new EntityNotExistsException("Refresh token not found");
         }
 
-        User user = refreshToken.getUser();
+        UserCacheDTO user = userCacheService.getUserById(refreshToken.userId());
         String newAccessToken = jwtUtils.generateToken(user);
-        String newRefreshToken = refreshToken.getToken();
-        if (refreshToken.getExpiryDate().isBefore(Instant.now().plusMillis(refreshTokenRenewBeforeTime))) {
+        String newRefreshToken = refreshToken.token();
+        if (Instant.parse(refreshToken.expiryDate()).isBefore(Instant.now().plusMillis(refreshTokenRenewBeforeTime))) {
+
             newRefreshToken = refreshTokenService.generateRefreshToken(user);
-            refreshTokenRepository.delete(refreshToken);
+            refreshTokenCacheService.delete(refreshToken);
 
         }
         return new AuthResponse(newAccessToken, newRefreshToken);

@@ -10,6 +10,7 @@ import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.ducle.authservice.model.dto.cache.UserCacheDTO;
 import com.ducle.authservice.model.entity.User;
 
 import io.jsonwebtoken.Claims;
@@ -31,6 +32,19 @@ public class JwtUtils {
     @PostConstruct
     public void init() {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes());
+    }
+
+    public String generateToken(UserCacheDTO user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("roles", List.of(user.role().name()));
+        claims.put("userId", user.id());
+        return Jwts.builder()
+                .subject(user.username())
+                .issuedAt(new Date())
+                .claims(claims)
+                .expiration(new Date(System.currentTimeMillis() + tokenExpirationTime))
+                .signWith(secretKey)
+                .compact();
     }
 
     public String generateToken(User user) {
